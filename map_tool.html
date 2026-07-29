@@ -52,6 +52,29 @@
         .marker-cluster { background: none !important; }
         .leaflet-cluster-spider-leg { display: none !important; }
 
+        /* ★ ダークモード切替ボタン ★ */
+        .theme-toggle {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.9);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            cursor: pointer;
+            z-index: 1000;
+            user-select: none;
+            transition: background 0.2s;
+        }
+        .theme-toggle:hover {
+            background: rgba(255,255,255,1);
+        }
+
         /* ==========================================================
            ★ 写真詳細ビュー（別ページ風の全画面オーバーレイ） ★
            写真エリア + 撮影情報エリア（スマホのアドレスバー等でも欠けないようflexで調整）
@@ -130,6 +153,7 @@
 </head>
 <body>
     <div id="map"></div>
+    <div class="theme-toggle" id="theme-toggle">🌙</div>
     <input type="file" id="file-input" style="display:none;" accept="image/jpeg">
 
     <!-- ★ 写真詳細ビュー（全画面） ★ -->
@@ -143,7 +167,34 @@
 
     <script>
         const map = L.map('map', { tap: true, touchZoom: true }).setView([35.6812, 139.7671], 13);
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {}).addTo(map);
+
+        // --- ★ 通常モード / ダークモードの2種類のタイルを用意 ★ ---
+        const lightTiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 20,
+            attribution: '&copy; OpenStreetMap contributors'
+        });
+        const darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            maxZoom: 20,
+            subdomains: 'abcd',
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+        });
+
+        lightTiles.addTo(map); // 最初は通常モードで表示
+
+        let isDarkMode = false;
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        themeToggleBtn.addEventListener('click', () => {
+            if (isDarkMode) {
+                map.removeLayer(darkTiles);
+                lightTiles.addTo(map);
+                themeToggleBtn.textContent = '🌙'; // 次に押すとダークモードになることを示す
+            } else {
+                map.removeLayer(lightTiles);
+                darkTiles.addTo(map);
+                themeToggleBtn.textContent = '☀️'; // 次に押すと通常モードになることを示す
+            }
+            isDarkMode = !isDarkMode;
+        });
 
         function formatSS(ss) {
             if (!ss) return "不明";
@@ -303,8 +354,7 @@
                     iso: "100",
                     ss: "1/50秒"
                 }
-            }
-            ,
+            },
             {
                 lat: 35.65876075364282,
                 lon: 139.74641561508182,
